@@ -1,5 +1,5 @@
 -- Authors: Ted Miller, Chris Garrett
--- Date: 10/26/2023
+-- Date: 12/6/2023
 
 USE music_streamer;
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS Users, Artists, Release_Types, Genres, Releases, Songs, Son
 
 -- Users table
 CREATE TABLE Users(
-	user_id INT NOT NULL AUTO_INCREMENT,
+	user_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     user_name VARCHAR(255),
     user_email VARCHAR(255),
     PRIMARY KEY (user_id)
@@ -16,7 +16,7 @@ CREATE TABLE Users(
 
 -- Artists table
 CREATE TABLE Artists(
-	artist_id INT NOT NULL AUTO_INCREMENT,
+	artist_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     artist_name VARCHAR(255) NOT NULL,
     artist_description MEDIUMTEXT,
     PRIMARY KEY (artist_id)
@@ -24,14 +24,14 @@ CREATE TABLE Artists(
 
 -- Release_Types table (album, extended-play, single, etc.)
 CREATE TABLE Release_Types(
-	release_type_id INT NOT NULL AUTO_INCREMENT,
+	release_type_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     release_type_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (release_type_id)
 );
 
 -- Genres table
 CREATE TABLE Genres(
-	genre_id INT NOT NULL AUTO_INCREMENT,
+	genre_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     genre_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (genre_id)
 );
@@ -40,7 +40,7 @@ CREATE TABLE Genres(
 -- References Release_Types to identify release as an album, ep, single, etc.
 -- References Artists to identify who published/released the album, ep, etc.
 CREATE TABLE Releases(
-	release_id INT NOT NULL AUTO_INCREMENT,
+	release_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     release_name VARCHAR(255) NOT NULL,
     release_type_id INT,
     artist_id INT NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE Releases(
 -- References Releases to attribute it to a specific release
 -- References Genres to classify it as a certain genre
 CREATE TABLE Songs(
-	song_id INT NOT NULL AUTO_INCREMENT,
+	song_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     song_name VARCHAR(255) NOT NULL,
     release_id INT NOT NULL,
     genre_id INT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE Songs(
 -- Song_Artists table. This is an intersection table that
 -- keeps track of the Artist(s) attributed to a song
 CREATE TABLE Song_Artists(
-	song_artists_id INT NOT NULL AUTO_INCREMENT,
+	song_artists_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     song_id INT NOT NULL,
     artist_id INT NOT NULL,
     PRIMARY KEY (song_artists_id),
@@ -84,9 +84,10 @@ CREATE TABLE Song_Artists(
 
 -- Playlists table
 CREATE TABLE Playlists(
-	playlist_id INT NOT NULL AUTO_INCREMENT,
-    playlist_name VARCHAR(255) NOT NULL,
+	playlist_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     user_id INT NOT NULL,
+    playlist_name VARCHAR(255) NOT NULL,
+    private TINYINT(1) DEFAULT 1 NOT NULL,
     PRIMARY KEY (playlist_id),
     FOREIGN KEY (user_id) REFERENCES Users(user_id) 
 		ON DELETE CASCADE	-- When a User is deleted, their playlists will also be deleted
@@ -95,16 +96,31 @@ CREATE TABLE Playlists(
 -- Playlist_Songs table. Intersection table that tracks
 -- the songs that are on a playlist
 CREATE TABLE Playlist_Songs(
-	playlist_song_id INT NOT NULL AUTO_INCREMENT,
+	playlist_song_id INT NOT NULL UNIQUE AUTO_INCREMENT,
     playlist_id INT NOT NULL,
     song_id INT NOT NULL,
     PRIMARY KEY (playlist_song_id),
-    FOREiGN KEY (playlist_id) REFERENCES Playlists(playlist_id) 
+    FOREIGN KEY (playlist_id) REFERENCES Playlists(playlist_id) 
 		ON DELETE CASCADE,	-- When a Playlist is deleted, all records associated in this table will be deleted
     FOREIGN KEY (song_id) REFERENCES Songs(song_id)
 		ON DELETE CASCADE	-- When a Song is deleted, all records associated in this table will be deleted
 );
 
+-- The following is a trigger definition for creating new Song_Artist records when a new song is added
+DROP TRIGGER IF EXISTS `cs340_millert8`.`Songs_AFTER_INSERT`;
+
+DELIMITER $$
+USE `cs340_millert8`$$
+CREATE TRIGGER `Songs_AFTER_INSERT` AFTER INSERT ON `Songs` FOR EACH ROW BEGIN
+	INSERT INTO Song_Artists(song_id, artist_id)
+    VALUES(NEW.song_id, (
+		SELECT Releases.artist_id FROM Releases 
+        WHERE Releases.release_id = NEW.release_id
+    ));
+END$$
+DELIMITER ;
+
+-- The following queries are for data insertion
 
 INSERT INTO Genres(genre_name) 
 VALUES ("Rock"), ("Alternative Rock"), ("Pop"), ("Electronic"), ("Country");
