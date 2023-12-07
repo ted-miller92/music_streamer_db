@@ -106,7 +106,8 @@ CREATE TABLE Playlist_Songs(
 		ON DELETE CASCADE	-- When a Song is deleted, all records associated in this table will be deleted
 );
 
--- The following is a trigger definition for creating new Song_Artist records when a new song is added
+-- The following is a trigger definition for creating new Song_Artist 
+-- records when a new song is added
 DROP TRIGGER IF EXISTS `cs340_millert8`.`Songs_AFTER_INSERT`;
 
 DELIMITER $$
@@ -147,14 +148,6 @@ VALUES
 	("By The Way", (SELECT release_id FROM Releases WHERE release_name = "By The Way"), (SELECT genre_id FROM Genres WHERE genre_name = "Alternative Rock"), 0),
 	("Bohemian Rhapsody", (SELECT release_id FROM Releases WHERE release_name = "A Night at the Opera"), (SELECT genre_id FROM Genres WHERE genre_name = "Rock"), 0),
 	("Somewhere I Belong", (SELECT release_id FROM Releases WHERE release_name = "Meteora"), (SELECT genre_id FROM Genres WHERE genre_name = "Alternative Rock"), 0);
-
---INSERT INTO Song_Artists(song_id, artist_id)
---VALUES
---	((SELECT song_id FROM Songs WHERE song_name = "Breaking the Habit"), (SELECT artist_id FROM Artists WHERE artist_name = "Linkin Park")),
---	((SELECT song_id FROM Songs WHERE song_name = "Can't Stop"), (SELECT artist_id FROM Artists WHERE artist_name = "Red Hot Chili Peppers")),
---	((SELECT song_id FROM Songs WHERE song_name = "By The Way"), (SELECT artist_id FROM Artists WHERE artist_name = "Red Hot Chili Peppers")),
---	((SELECT song_id FROM Songs WHERE song_name = "Bohemian Rhapsody"), (SELECT artist_id FROM Artists WHERE artist_name = "Queen")),
---	((SELECT song_id FROM Songs WHERE song_name = "Somewhere I Belong"), (SELECT artist_id FROM Artists WHERE artist_name = "Linkin Park"));
 
 INSERT INTO Users (user_name, user_email)
 VALUES 

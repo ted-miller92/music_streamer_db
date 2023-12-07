@@ -14,6 +14,15 @@ on the Artists table.
 -- Fetch Artists, 
 SELECT * FROM Artists;
 
+-- Fetch artist by id
+SELECT * FROM Artists 
+WHERE artist_id = ${data.artistID};
+
+-- Search for an Artist by name
+SELECT * FROM Artists 
+WHERE artist_name = "${data.artistName}"
+ORDER BY Artists.artist_name ASC;
+
 -- Create an artist
 INSERT INTO Artists(artist_name, artist_description)
 VALUES(${artistName}, ${artistDescription})
@@ -70,8 +79,10 @@ INSERT INTO Playlists(playlist_name, user_id)
 VALUES(${playlistName}, ${userID});
 
 -- Update a playlist
-UPDATE Playlists
-SET playlist_name = "${playlistName}"
+UPDATE Playlists 
+SET playlist_name = "${playlistName}",
+user_id = "${userID}",
+private = ${isPrivate}
 WHERE playlist_id = ${playlistID};
 
 -- Delete a playlist
@@ -112,19 +123,28 @@ on the Releases table.
 
 -- Fetch releases of a given artist
 SELECT * FROM Releases
-WHERE artist_id = ${artistID};
+INNER JOIN Release_Types 
+ON Releases.release_type_id = Release_Types.release_type_id
+WHERE artist_id = ${data.artistID};
+
+-- Fetch releases and associated data, sort by artist name
+SELECT Releases.release_id, Releases.release_name, 
+Artists.artist_id, Artists.artist_name,
+Release_Types.release_type_id, Release_Types.release_type_name 
+FROM Releases
+INNER JOIN Artists ON Releases.artist_id = Artists.artist_id
+INNER JOIN Release_Types ON Releases.release_type_id = Release_Types.release_type_id
+ORDER BY Artists.artist_name ASC;
 
 -- Create a new release
 INSERT INTO Releases(release_name, release_type_id, artist_id)
 VALUES("${releaseName}", ${releaseTypeID}, ${artistID});
 
 -- Update a release
-UPDATE Releases
-SET release_name = "${releaseName}"
-WHERE release_id = ${releaseID};
-
-UPDATE Releases
-SET release_type_id = ${releaseTypeID}
+UPDATE Releases 
+SET releaseName = "${releaseName}",
+artist_id = "${artistID}",
+release_type_id = ${releaseTypeID}
 WHERE release_id = ${releaseID};
 
 -- Delete a release
@@ -139,7 +159,9 @@ on the Release_Types table.
 -- Fetch release types
 SELECT * FROM Release_Types;
 
-SELECT release_type_id FROM Release_Types;
+-- Fetch a single release type
+SELECT * FROM Release_Types
+WHERE release_type_id = ${data.releaseTypeID};
 
 -- Create a new Release_Type
 INSERT INTO Release_Types(release_type_name)
@@ -163,22 +185,39 @@ on the Songs table.
 SELECT * FROM Songs
 WHERE release_id = ${releaseID};
 
--- Fetch all songs from an Artist
+-- Fetch all songs and join with descriptive data of Releases, Artists, Genres
 SELECT * FROM Songs
 INNER JOIN Song_Artists ON Songs.song_id = Song_Artists.song_id
-WHERE Song_Artists.artist_id = ${artistID};
+INNER JOIN Artists ON Song_Artists.artist_id = Artists.artist_id
+INNER JOIN Releases ON Songs.release_id = Releases.release_id
+INNER JOIN Genres ON Songs.genre_id = Genres.genre_id;
+
+-- Search for a song
+SELECT * FROM Songs
+INNER JOIN Song_Artists ON Songs.song_id = Song_Artists.song_id
+INNER JOIN Artists ON Song_Artists.artist_id = Artists.artist_id
+INNER JOIN Releases ON Songs.release_id = Releases.release_id
+INNER JOIN Genres ON Songs.genre_id = Genres.genre_id
+WHERE Songs.song_name LIKE '%${data.searchSong}%';
+
+-- Fetch all songs from an Artist
+SELECT * FROM Songs 
+INNER JOIN Song_Artists ON Songs.song_id = Song_Artists.song_id
+INNER JOIN Artists ON Song_Artists.artist_id = Artists.artist_id
+INNER JOIN Releases ON Songs.release_id = Releases.release_id
+INNER JOIN Genres ON Songs.genre_id = Genres.genre_id
+WHERE Song_Artists.artist_id = ${data.artistID};
 
 -- Create a new song
 INSERT INTO Songs(song_name, release_id, genre_id, stream_count)
 VALUES("${songName}", ${releaseID}, ${genreID}, 0);
 
 -- Update a song
-UPDATE Songs
-SET song_name = "${songName}"
-WHERE song_id = ${songId};
-
-UPDATE Songs
-SET genre_id = ${genreID}
+UPDATE Songs 
+SET song_name = "${songName}",
+release_id = "${releaseID}",
+genre_id = ${genreID},
+stream_count = ${streamCount}
 WHERE song_id = ${songID};
 
 -- Delete a song
