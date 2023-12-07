@@ -1,7 +1,8 @@
 -- Authors: Ted Miller, Chris Garrett
 -- Date: 12/6/2023
 
-USE music_streamer;
+-- USE music_streamer;
+USE cs340_millert8;
 
 -- Drop tables before creating new ones
 DROP TABLE IF EXISTS Users, Artists, Release_Types, Genres, Releases, Songs, Song_Artists, Playlists, Playlist_Songs;
@@ -9,8 +10,8 @@ DROP TABLE IF EXISTS Users, Artists, Release_Types, Genres, Releases, Songs, Son
 -- Users table
 CREATE TABLE Users(
 	user_id INT NOT NULL UNIQUE AUTO_INCREMENT,
-    user_name VARCHAR(255),
-    user_email VARCHAR(255),
+    user_name VARCHAR(255) UNIQUE,
+    user_email VARCHAR(255) UNIQUE,
     PRIMARY KEY (user_id)
 );
 
@@ -25,14 +26,14 @@ CREATE TABLE Artists(
 -- Release_Types table (album, extended-play, single, etc.)
 CREATE TABLE Release_Types(
 	release_type_id INT NOT NULL UNIQUE AUTO_INCREMENT,
-    release_type_name VARCHAR(255) NOT NULL,
+    release_type_name VARCHAR(255) NOT NULL UNIQUE,
     PRIMARY KEY (release_type_id)
 );
 
 -- Genres table
 CREATE TABLE Genres(
 	genre_id INT NOT NULL UNIQUE AUTO_INCREMENT,
-    genre_name VARCHAR(255) NOT NULL,
+    genre_name VARCHAR(255) NOT NULL UNIQUE,
     PRIMARY KEY (genre_id)
 );
 
@@ -109,9 +110,11 @@ CREATE TABLE Playlist_Songs(
 -- The following is a trigger definition for creating new Song_Artist 
 -- records when a new song is added
 DROP TRIGGER IF EXISTS `cs340_millert8`.`Songs_AFTER_INSERT`;
+-- DROP TRIGGER IF EXISTS `music_streamer`.`Songs_AFTER_INSERT`;
 
 DELIMITER $$
 USE `cs340_millert8`$$
+-- USE `cs340_millert8`$$
 CREATE TRIGGER `Songs_AFTER_INSERT` AFTER INSERT ON `Songs` FOR EACH ROW BEGIN
 	INSERT INTO Song_Artists(song_id, artist_id)
     VALUES(NEW.song_id, (
